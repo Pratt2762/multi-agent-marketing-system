@@ -1,0 +1,4 @@
+OPENAI_API_KEY = "YOUR_OPENAI_KEY_HERE"
+
+MODEL_NAME = "gpt-5.1"   # use latest
+TEMPERATURE = 0.0
