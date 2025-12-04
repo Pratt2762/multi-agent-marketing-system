@@ -19,15 +19,28 @@ State (JSON):
 Produce output strictly in this JSON format:
 
 {{
-  "budget_reallocation": [
-    {{"campaign_id": "", "old_budget": 0, "new_budget": 0}}
+  "campaign_budget_actions": [
+    {{
+      "campaign_id": 0,
+      "type": "increase_budget | decrease_budget | no_change",
+      "confidence": 0.0,
+      "reason": "Short explanation for the action"
+    }}
   ],
-  "bid_adjustments": [
-    {{"ad_group_id": "", "old_bid": 0, "new_bid": 0}}
+  "ad_group_bid_actions": [
+    {{
+      "ad_group_id": 0,
+      "type": "raise_bid | lower_bid | no_change",
+      "reason": "Short explanation for the action"
+    }}
   ],
-  "audience_targeting": [
-    {{"audience_segment": "", "action": "increase | decrease | suppress", "reason": ""}}
+  "audience_targeting_actions": [
+    {{
+      "audience_id": 0,
+      "type": "suppress | activate | no_change",
+      "reason": "Short explanation for the action"
+    }}
   ],
-  "explanation": "Short human-readable explanation"
+  "explanation": "Short human-readable explanation of the overall strategy"
 }}
 """
