@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maruti Suzuki - AI Marketing Agent</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <header>
@@ -12,8 +13,39 @@
         <p class="subtitle">Intelligent Campaign Optimization System</p>
     </header>
 
+    <!-- Performance Trend Charts -->
+    <section id="performance-charts" style="display: none;">
+        <div class="charts-container">
+            <div class="chart-card">
+                <h3 class="chart-title">Campaign ROAS Trend</h3>
+                <p class="chart-subtitle">Return on Ad Spend Performance (Week 1-<span id="roas-current-week">12</span>)</p>
+                <canvas id="roas-chart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Campaign CTR Trend</h3>
+                <p class="chart-subtitle">Click-Through Rate Performance (Week 1-<span id="ctr-current-week">12</span>)</p>
+                <canvas id="ctr-chart"></canvas>
+            </div>
+        </div>
+    </section>
+
     <div class="controls">
-        <button id="visualize" onclick="loadResults()">Run AI Agent Analysis</button>
+        <div class="controls-row">
+            <button id="visualize" onclick="loadResults()">Run AI Agent Analysis</button>
+            <div id="week-navigator" style="display: none;">
+                <button id="prev-week" onclick="navigateWeek(-1)" title="Previous Week">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <span id="current-week-display">Week 12</span>
+                <button id="next-week" onclick="navigateWeek(1)" title="Next Week">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </div>
         <p id="status"></p>
     </div>
 
@@ -21,85 +53,64 @@
         <!-- Executive Dashboard -->
         <section id="executive-dashboard">
             <div class="dashboard-header">
-                <h2>Autonomous AI Analysis Results</h2>
-                <p class="dashboard-subtitle">Week <span id="latest-week">N/A</span> Performance Overview</p>
+                <h2>AI Agent Executive Summary</h2>
+                <p class="dashboard-subtitle">Week <span id="latest-week">N/A</span> - Autonomous Optimization Overview</p>
             </div>
             <div id="action-summary-cards" class="summary-cards-grid">
                 <!-- Will be populated by JavaScript -->
             </div>
         </section>
 
-        <!-- Three-Column Layout -->
+        <!-- Stacked Recommendations Layout -->
         <section id="ai-recommendations">
-            <h2>AI Optimization Recommendations</h2>
-            <div class="three-column-container">
-                <!-- Column 1: Budget Reallocation -->
-                <div class="recommendation-column budget-column">
-                    <div class="column-header">
-                        <h3>Budget Reallocation</h3>
-                        <p class="column-subtitle">Campaign-Level Optimization</p>
-                    </div>
-                    <div id="budget-recommendations">
+            <h2 class="recommendations-title">Intelligent Decision Breakdown</h2>
+            <p class="recommendations-subtitle">Detailed AI-Driven Campaign Optimizations</p>
+
+            <!-- Section 1: Budget Reallocation -->
+            <div class="recommendation-section budget-section">
+                <div class="section-header">
+                    <h3>Budget Reallocation</h3>
+                    <p class="section-subtitle">Campaign-Level Optimization</p>
+                </div>
+                <div class="section-content-grid">
+                    <div id="budget-recommendations-positive" class="recommendations-column positive-column">
                         <!-- Will be populated by JavaScript -->
                     </div>
-                </div>
-
-                <!-- Column 2: Bid Adjustments -->
-                <div class="recommendation-column bids-column">
-                    <div class="column-header">
-                        <h3>Bid Adjustments</h3>
-                        <p class="column-subtitle">Ad Group-Level Optimization</p>
-                    </div>
-                    <div id="bid-recommendations">
-                        <!-- Will be populated by JavaScript -->
-                    </div>
-                </div>
-
-                <!-- Column 3: Audience Targeting -->
-                <div class="recommendation-column audience-column">
-                    <div class="column-header">
-                        <h3>Audience Targeting</h3>
-                        <p class="column-subtitle">Audience-Level Optimization</p>
-                    </div>
-                    <div id="audience-recommendations">
+                    <div id="budget-recommendations-negative" class="recommendations-column negative-column">
                         <!-- Will be populated by JavaScript -->
                     </div>
                 </div>
             </div>
-        </section>
 
-        <!-- AI Explanation Panel -->
-        <section id="ai-explanation">
-            <h2>AI Agent Reasoning</h2>
-            <div id="ai-explanation-content" class="explanation-panel">
-                <!-- Will be populated by JavaScript -->
+            <!-- Section 2: Bid Adjustments -->
+            <div class="recommendation-section bids-section">
+                <div class="section-header">
+                    <h3>Bid Adjustments</h3>
+                    <p class="section-subtitle">Ad Group-Level Optimization</p>
+                </div>
+                <div class="section-content-grid">
+                    <div id="bid-recommendations-positive" class="recommendations-column positive-column">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                    <div id="bid-recommendations-negative" class="recommendations-column negative-column">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
             </div>
-        </section>
 
-        <!-- Detailed Performance Data (Collapsible) -->
-        <section id="detailed-data" class="collapsible-section">
-            <h2 onclick="toggleSection('detailed-data-content')">
-                Detailed Performance Data
-                <span class="toggle-icon">▼</span>
-            </h2>
-            <div id="detailed-data-content" class="section-content" style="display: none;">
-                <div id="summary-cards" class="card-container">
-                    <!-- Summary Cards will be rendered here -->
+            <!-- Section 3: Audience Targeting -->
+            <div class="recommendation-section audience-section">
+                <div class="section-header">
+                    <h3>Audience Targeting</h3>
+                    <p class="section-subtitle">Audience-Level Optimization</p>
                 </div>
-
-                <div id="campaign-selector">
-                    <label for="campaign-select">Select Campaign:</label>
-                    <select id="campaign-select" onchange="updateAdGroupTable(this.value)"></select>
-                </div>
-
-                <div id="ad-group-detail">
-                    <h4>Weekly Ad-Group Performance</h4>
-                    <div id="ad-group-table-content"></div>
-                </div>
-
-                <div id="initial-state">
-                    <h3>Top/Bottom Performers by ROAS</h3>
-                    <div id="initial-state-content"></div>
+                <div class="section-content-grid">
+                    <div id="audience-recommendations-positive" class="recommendations-column positive-column">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                    <div id="audience-recommendations-negative" class="recommendations-column negative-column">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
                 </div>
             </div>
         </section>
