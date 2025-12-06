@@ -95,7 +95,10 @@ def run_agent_and_save_results():
             print(f"Error saving results to JSON: {e}")
             
     except Exception as e:
+        import traceback
         print(f"An error occurred during agent run: {e}")
+        print("Full traceback:")
+        traceback.print_exc()
         return
 
 if __name__ == "__main__":
