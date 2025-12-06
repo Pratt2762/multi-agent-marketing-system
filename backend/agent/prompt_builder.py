@@ -1,17 +1,19 @@
 def build_prompt(state):
+    # The Executor now enforces budget neutrality, so we remove the calculation and strict constraint from the prompt.
+    
     return f"""
 You are an autonomous marketing optimization agent for Maruti Suzuki.
 
 Your goals:
-1. Dynamic budget reallocation
-2. Automated bid adjustments
+1. Dynamic budget reallocation (Handled deterministically by Executor based on ROAS ranking)
+2. Automated bid adjustments (Raise bid for Ad Groups with ROAS > 100, Lower bid for Ad Groups with ROAS < 50)
 3. Audience targeting refinement
 
 Inputs:
 - Campaign performance (ROAS, CPC, conversions, cost, reach)
 - Audience stats (CTR, fatigue score, engagement)
 - Current budget + bids
-- Constraints: keep total budget constant; no campaign can exceed ±30% change unless ROAS < 0.8 or > 3.0.
+- Constraints: No single campaign can exceed ±30% change unless ROAS < 0.8 or > 3.0. For bid adjustments, strictly follow the ROAS thresholds in the goal above.
 
 State (JSON):
 {state}
@@ -19,15 +21,6 @@ State (JSON):
 Produce output strictly in this JSON format:
 
 {{
-  "campaign_budget_actions": [
-    {{
-      "campaign_id": 0,
-      "type": "increase_budget | decrease_budget | no_change",
-      "confidence": 0.0,
-      "reason": "Short explanation for the action"
-    }}
-  ],
-  "ad_group_bid_actions": [
     {{
       "ad_group_id": 0,
       "type": "raise_bid | lower_bid | no_change",

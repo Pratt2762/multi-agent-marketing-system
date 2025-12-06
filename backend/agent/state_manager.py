@@ -1,19 +1,18 @@
 import pandas as pd
 
-def get_latest_week_state(data):
+def get_state_for_week(data, week):
+    """Constructs the full world-state for a specific week."""
     # Sanity check for data presence
     if data["campaigns"].empty or data["ad_groups"].empty or data["audiences"].empty:
         raise ValueError("One or more datasets are empty. Cannot construct state.")
 
-    latest_week = data["campaigns"]["week"].max()
-
-    # Filter data to latest week
-    campaigns_df = data["campaigns"][data["campaigns"]["week"] == latest_week]
-    ad_groups_df = data["ad_groups"][data["ad_groups"]["week"] == latest_week]
-    audiences_df = data["audiences"][data["audiences"]["week"] == latest_week]
+    # Filter data to the specified week
+    campaigns_df = data["campaigns"][data["campaigns"]["week"] == week]
+    ad_groups_df = data["ad_groups"][data["ad_groups"]["week"] == week]
+    audiences_df = data["audiences"][data["audiences"]["week"] == week]
 
     if campaigns_df.empty or ad_groups_df.empty or audiences_df.empty:
-        raise ValueError(f"No data found for the latest week: {latest_week}. Cannot construct state.")
+        raise ValueError(f"No data found for week: {week}. Cannot construct state.")
 
     # ---- 1. COMPACT CAMPAIGN SUMMARY ----
     campaigns = campaigns_df[[
@@ -58,8 +57,13 @@ def get_latest_week_state(data):
     ]].to_dict(orient="records")
 
     return {
-        "latest_week": int(latest_week), # Ensure it's a standard type for JSON
+        "week": int(week), # Ensure it's a standard type for JSON
         "campaigns": campaigns,
         "ad_groups": ad_groups,
         "audiences": audiences
     }
+
+def get_latest_week_state(data):
+    """Helper to get the state for the latest week."""
+    latest_week = data["campaigns"]["week"].max()
+    return get_state_for_week(data, latest_week)

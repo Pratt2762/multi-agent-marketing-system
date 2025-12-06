@@ -5,11 +5,38 @@
     <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <h1>Maruti Suzuki – Agentic AI Optimizer</h1>
-    <button id="run">Run Agent</button>
-
-    <div id="results"></div>
-
-    <script src="script.js"></script>
+    <h1>Maruti Suzuki - Multi-Agent Marketing System </h1>
+    <button id="run" onclick="runAgent()">Run Agent (Generate results.json)</button>
+        <button id="visualize" onclick="loadResults()">Load Visualization</button>
+        <p id="status"></p>
+    
+        <div id="results">
+            <h2>Agent Simulation Results (Week <span id="latest-week">N/A</span>)</h2>
+            <div id="campaign-selector">
+                <label for="campaign-select">Select Campaign:</label>
+                <select id="campaign-select" onchange="updateAdGroupTable(this.value)"></select>
+            </div>
+            <div id="ad-group-detail">
+                <h4>Weekly Ad-Group Performance & Actions</h4>
+                <div id="ad-group-table-content"></div>
+            </div>
+            
+            <div id="summary-cards" class="card-container">
+                <!-- Summary Cards will be rendered here by script.js -->
+            </div>
+            <div class="section-container">
+                <section id="initial-state">
+                    <h3>2. Performance Snapshot (Top/Bottom Performers)</h3>
+                    <div id="initial-state-content"></div>
+                </section>
+            </div>
+    
+            <section id="decisions">
+                <h3>3. Agent Decisions (Budget Reallocation & LLM Actions)</h3>
+                <div id="decisions-content"></div>
+            </section>
+        </div>
+    
+        <script src="script.js"></script>
 </body>
 </html>

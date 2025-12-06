@@ -1,0 +1,19 @@
+{
+    "budget": {
+        "increase_factor": 0.15,
+        "decrease_factor": 0.15,
+        "min_budget": 100.0,
+        "max_increase_cap_factor": 1.30
+    },
+    "bid": {
+        "increase_factor": 0.10,
+        "decrease_factor": 0.10,
+        "min_cpc": 0.5
+    },
+    "audience": {
+        "fatigue_threshold": 5.0
+    },
+    "logging": {
+        "trace_mode": true
+    }
+}
