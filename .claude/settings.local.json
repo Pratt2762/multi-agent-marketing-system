@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python backend/main.py:*)",
       "Bash(python3:*)",
-      "Bash(where python py python3)"
+      "Bash(where python py python3)",
+      "Bash(py -c:*)"
     ],
     "deny": [],
     "ask": []

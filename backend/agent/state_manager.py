@@ -1,7 +1,8 @@
 import pandas as pd
+from backend.logic.analytics_enricher import enrich_state_with_analytics
 
 def get_state_for_week(data, week):
-    """Constructs the full world-state for a specific week."""
+    """Constructs the full world-state for a specific week with analytics enrichment."""
     # Sanity check for data presence
     if data["campaigns"].empty or data["ad_groups"].empty or data["audiences"].empty:
         raise ValueError("One or more datasets are empty. Cannot construct state.")
@@ -56,12 +57,19 @@ def get_state_for_week(data, week):
         "avg_cvr"
     ]].to_dict(orient="records")
 
-    return {
+    # Build base state
+    state = {
         "week": int(week), # Ensure it's a standard type for JSON
         "campaigns": campaigns,
         "ad_groups": ad_groups,
         "audiences": audiences
     }
+
+    # ---- 4. ENRICH WITH ANALYTICS ----
+    # Add comparative analytics, trends, and portfolio summary
+    enriched_state = enrich_state_with_analytics(state, data, week)
+
+    return enriched_state
 
 def get_latest_week_state(data):
     """Helper to get the state for the latest week."""

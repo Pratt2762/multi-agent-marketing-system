@@ -17,14 +17,29 @@
     <section id="performance-charts" style="display: none;">
         <div class="charts-container">
             <div class="chart-card">
-                <h3 class="chart-title">Campaign ROAS Trend</h3>
-                <p class="chart-subtitle">Return on Ad Spend Performance (Week 1-<span id="roas-current-week">12</span>)</p>
-                <canvas id="roas-chart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3 class="chart-title">Campaign CTR Trend</h3>
-                <p class="chart-subtitle">Click-Through Rate Performance (Week 1-<span id="ctr-current-week">12</span>)</p>
-                <canvas id="ctr-chart"></canvas>
+                <div class="chart-header-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Campaign Performance Trends</h3>
+                        <p class="chart-subtitle">ROAS & CTR Analysis (Week 1-<span id="charts-current-week">12</span>)</p>
+                    </div>
+                    <div class="campaign-selector-wrapper">
+                        <label for="campaign-select">Select Campaigns:</label>
+                        <select id="campaign-select" multiple size="3">
+                            <!-- Will be populated by JavaScript -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="individual-chart">
+                        <h4 class="individual-chart-title">ROAS Trend</h4>
+                        <canvas id="roas-chart"></canvas>
+                    </div>
+                    <div class="individual-chart">
+                        <h4 class="individual-chart-title">CTR Trend</h4>
+                        <canvas id="ctr-chart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -54,7 +69,7 @@
         <section id="executive-dashboard">
             <div class="dashboard-header">
                 <h2>AI Agent Executive Summary</h2>
-                <p class="dashboard-subtitle">Week <span id="latest-week">N/A</span> - Autonomous Optimization Overview</p>
+                <p class="dashboard-subtitle">Week <span id="latest-week">N/A</span> - Optimization Overview</p>
             </div>
             <div id="action-summary-cards" class="summary-cards-grid">
                 <!-- Will be populated by JavaScript -->

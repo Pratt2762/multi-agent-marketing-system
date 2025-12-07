@@ -478,44 +478,134 @@ function renderAIExplanation(recommendations) {
 // ===========================================
 // Performance Charts Functions
 // ===========================================
+
+// Helper function to generate distinct colors for each campaign
+function generateDistinctColors(count) {
+    const colors = [];
+    const hueStep = 360 / count;
+
+    for (let i = 0; i < count; i++) {
+        const hue = i * hueStep;
+        // Use varying saturation and lightness for better distinction
+        const saturation = 60 + (i % 3) * 15;
+        const lightness = 45 + (i % 4) * 10;
+        colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+    }
+
+    return colors;
+}
+
 function renderPerformanceCharts() {
+    // Defensive checks
+    if (!globalData || !globalData.campaign_history || globalData.campaign_history.length === 0) {
+        console.error('No campaign history data available');
+        return;
+    }
+
     const campaignHistory = globalData.campaign_history;
+
+    // Check if first week has valid data
+    if (!campaignHistory[0] || !campaignHistory[0].state_snapshot || !Array.isArray(campaignHistory[0].state_snapshot.campaigns)) {
+        console.error('Invalid campaign data structure');
+        return;
+    }
 
     // Always use ALL weeks for the charts (static display)
     const weeks = campaignHistory.map(entry => `Week ${entry.week}`);
 
-    // Calculate average ROAS and CTR per week across all campaigns
-    const avgROASPerWeek = campaignHistory.map(entry => {
-        const campaigns = entry.state_snapshot.campaigns;
-        const totalROAS = campaigns.reduce((sum, c) => sum + c.roas, 0);
-        return (totalROAS / campaigns.length).toFixed(2);
+    // Build a map of campaign_id -> {name, roas_data[], ctr_data[]}
+    const campaignMap = {};
+
+    // Initialize campaign map with all campaigns from the first week
+    campaignHistory[0].state_snapshot.campaigns.forEach(campaign => {
+        campaignMap[campaign.campaign_id] = {
+            name: campaign.campaign_name,
+            roasData: [],
+            ctrData: []
+        };
     });
 
-    const avgCTRPerWeek = campaignHistory.map(entry => {
-        const campaigns = entry.state_snapshot.campaigns;
-        // Calculate weighted average CTR based on impressions
-        const totalClicks = campaigns.reduce((sum, c) => sum + (c.weekly_clicks || 0), 0);
-        const totalImpressions = campaigns.reduce((sum, c) => sum + (c.weekly_impressions || 0), 0);
-        const avgCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
-        return avgCTR.toFixed(2);
+    // Populate data for each campaign across all weeks
+    campaignHistory.forEach(entry => {
+        entry.state_snapshot.campaigns.forEach(campaign => {
+            const campId = campaign.campaign_id;
+
+            // Add ROAS data
+            campaignMap[campId].roasData.push(campaign.roas);
+
+            // Add CTR data (calculate from clicks and impressions)
+            const clicks = campaign.weekly_clicks || 0;
+            const impressions = campaign.weekly_impressions || 0;
+            const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+            campaignMap[campId].ctrData.push(ctr);
+        });
     });
 
     // Update week indicators to show full range
     const maxWeek = campaignHistory[campaignHistory.length - 1].week;
-    document.getElementById('roas-current-week').textContent = maxWeek;
-    document.getElementById('ctr-current-week').textContent = maxWeek;
+    document.getElementById('charts-current-week').textContent = maxWeek;
 
     // Show the charts section
     document.getElementById('performance-charts').style.display = 'block';
 
-    // Render ROAS Chart
-    renderROASChart(weeks, avgROASPerWeek);
+    // Populate single campaign selector for both charts
+    populateCampaignSelector(campaignMap);
 
-    // Render CTR Chart
-    renderCTRChart(weeks, avgCTRPerWeek);
+    // Render both charts with the same selected campaigns (initially show top 5)
+    const selectedCampaigns = getSelectedCampaigns();
+    renderROASChart(weeks, campaignMap, selectedCampaigns);
+    renderCTRChart(weeks, campaignMap, selectedCampaigns);
 }
 
-function renderROASChart(weeks, data) {
+function populateCampaignSelector(campaignMap) {
+    const select = document.getElementById('campaign-select');
+
+    // Clear existing options and event listeners
+    const newSelect = select.cloneNode(false);
+    select.parentNode.replaceChild(newSelect, select);
+
+    // Get campaign IDs sorted by average ROAS (descending)
+    const campaignIds = Object.keys(campaignMap).sort((a, b) => {
+        const avgRoasA = campaignMap[a].roasData.reduce((sum, val) => sum + val, 0) / campaignMap[a].roasData.length;
+        const avgRoasB = campaignMap[b].roasData.reduce((sum, val) => sum + val, 0) / campaignMap[b].roasData.length;
+        return avgRoasB - avgRoasA;
+    });
+
+    // Populate selector
+    campaignIds.forEach((campaignId, index) => {
+        const campaign = campaignMap[campaignId];
+        const option = document.createElement('option');
+        option.value = campaignId;
+        option.textContent = campaign.name;
+        option.selected = index < 5; // Select top 5 by default
+
+        newSelect.appendChild(option);
+    });
+
+    // Add change event listener to update BOTH charts when selection changes
+    newSelect.addEventListener('change', () => {
+        if (!globalData || !globalData.campaign_history) {
+            console.error('Campaign data not available');
+            return;
+        }
+
+        const campaignHistory = globalData.campaign_history;
+        const weeks = campaignHistory.map(entry => `Week ${entry.week}`);
+        const selectedCampaigns = getSelectedCampaigns();
+
+        // Update both charts with the same selection
+        renderROASChart(weeks, campaignMap, selectedCampaigns);
+        renderCTRChart(weeks, campaignMap, selectedCampaigns);
+    });
+}
+
+function getSelectedCampaigns() {
+    const select = document.getElementById('campaign-select');
+    const selectedOptions = Array.from(select.selectedOptions);
+    return selectedOptions.map(option => option.value);
+}
+
+function renderROASChart(weeks, campaignMap, selectedCampaignIds = null) {
     const ctx = document.getElementById('roas-chart').getContext('2d');
 
     // Destroy existing chart if it exists
@@ -523,24 +613,38 @@ function renderROASChart(weeks, data) {
         roasChart.destroy();
     }
 
+    // Filter campaigns based on selection
+    const campaignsToShow = selectedCampaignIds && selectedCampaignIds.length > 0
+        ? selectedCampaignIds
+        : Object.keys(campaignMap);
+
+    // Generate distinct colors for selected campaigns
+    const colors = generateDistinctColors(campaignsToShow.length);
+
+    // Create datasets for selected campaigns only
+    const datasets = campaignsToShow.map((campaignId, index) => {
+        const campaign = campaignMap[campaignId];
+        return {
+            label: campaign.name,
+            data: campaign.roasData,
+            borderColor: colors[index],
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: colors[index],
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+        };
+    });
+
     roasChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: weeks,
-            datasets: [{
-                label: 'Average ROAS',
-                data: data,
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                pointBackgroundColor: '#667eea',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2
-            }]
+            datasets: datasets
         },
         options: {
             responsive: true,
@@ -561,7 +665,7 @@ function renderROASChart(weeks, data) {
                     },
                     callbacks: {
                         label: function(context) {
-                            return 'ROAS: ' + context.parsed.y;
+                            return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
                         }
                     }
                 }
@@ -593,7 +697,7 @@ function renderROASChart(weeks, data) {
     });
 }
 
-function renderCTRChart(weeks, data) {
+function renderCTRChart(weeks, campaignMap, selectedCampaignIds = null) {
     const ctx = document.getElementById('ctr-chart').getContext('2d');
 
     // Destroy existing chart if it exists
@@ -601,24 +705,38 @@ function renderCTRChart(weeks, data) {
         ctrChart.destroy();
     }
 
+    // Filter campaigns based on selection
+    const campaignsToShow = selectedCampaignIds && selectedCampaignIds.length > 0
+        ? selectedCampaignIds
+        : Object.keys(campaignMap);
+
+    // Generate distinct colors for selected campaigns
+    const colors = generateDistinctColors(campaignsToShow.length);
+
+    // Create datasets for selected campaigns only
+    const datasets = campaignsToShow.map((campaignId, index) => {
+        const campaign = campaignMap[campaignId];
+        return {
+            label: campaign.name,
+            data: campaign.ctrData,
+            borderColor: colors[index],
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: colors[index],
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+        };
+    });
+
     ctrChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: weeks,
-            datasets: [{
-                label: 'Average CTR (%)',
-                data: data,
-                borderColor: '#764ba2',
-                backgroundColor: 'rgba(118, 75, 162, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                pointBackgroundColor: '#764ba2',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2
-            }]
+            datasets: datasets
         },
         options: {
             responsive: true,
@@ -639,7 +757,7 @@ function renderCTRChart(weeks, data) {
                     },
                     callbacks: {
                         label: function(context) {
-                            return 'CTR: ' + context.parsed.y + '%';
+                            return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + '%';
                         }
                     }
                 }
@@ -743,6 +861,25 @@ function loadResults() {
             return response.json();
         })
         .then(data => {
+            console.log('Data loaded:', data);
+
+            // Validate data structure
+            if (!data || !data.campaign_history || !Array.isArray(data.campaign_history)) {
+                throw new Error('Invalid data structure: campaign_history missing or not an array');
+            }
+
+            if (data.campaign_history.length === 0) {
+                throw new Error('campaign_history is empty');
+            }
+
+            if (!data.campaign_history[0].state_snapshot) {
+                throw new Error('state_snapshot missing from first week');
+            }
+
+            if (!Array.isArray(data.campaign_history[0].state_snapshot.campaigns)) {
+                throw new Error('campaigns is not an array: ' + typeof data.campaign_history[0].state_snapshot.campaigns);
+            }
+
             globalData = data;
 
             // Render static performance charts (once, with all weeks)
@@ -757,6 +894,7 @@ function loadResults() {
             document.getElementById('status').innerHTML = '';
         })
         .catch(error => {
+            console.error('Load error:', error);
             document.getElementById('status').innerHTML = `<strong>Error:</strong> ${error.message}. Please run the backend first.`;
         });
 }
@@ -861,17 +999,6 @@ function renderTable(data, columns) {
 
     html += '</tbody></table>';
     return html;
-}
-
-function populateCampaignSelector(campaigns) {
-    const select = document.getElementById('campaign-select');
-    select.innerHTML = '<option value="">-- Select a campaign --</option>';
-    campaigns.forEach(campaign => {
-        const option = document.createElement('option');
-        option.value = campaign.campaign_id;
-        option.textContent = `${campaign.campaign_id}: ${campaign.campaign_name}`;
-        select.appendChild(option);
-    });
 }
 
 function updateAdGroupTable(campaignId) {

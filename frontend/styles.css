@@ -98,7 +98,7 @@ button {
 
 .charts-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 30px;
     margin-bottom: 20px;
 }
@@ -117,26 +117,106 @@ button {
     box-shadow: 0 12px 32px rgba(102, 126, 234, 0.2);
 }
 
-.chart-title {
-    margin: 0 0 8px 0;
-    font-size: 1.5em;
-    font-weight: 700;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+.chart-header-container {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.chart-header {
     text-align: center;
+    width: 100%;
+}
+
+.chart-title {
+    margin: 0 0 10px 0;
+    font-size: 2.2em;
+    font-weight: 700;
+    color: #2c3e50;
+    letter-spacing: -0.5px;
 }
 
 .chart-subtitle {
-    margin: 0 0 20px 0;
-    font-size: 0.9em;
+    margin: 10px 0 20px 0;
+    font-size: 1.15em;
     color: #6c757d;
-    text-align: center;
     font-weight: 500;
+    letter-spacing: 0.3px;
 }
 
-.chart-card canvas {
+.campaign-selector-wrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.campaign-selector-wrapper label {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #2c3e50;
+    white-space: nowrap;
+}
+
+.campaign-selector-wrapper select {
+    padding: 4px 8px;
+    border: 2px solid #e1e8ed;
+    border-radius: 6px;
+    font-size: 0.7em;
+    background: white;
+    cursor: pointer;
+    max-height: 75px;
+    min-width: 220px;
+    overflow-y: auto;
+    line-height: 1.3;
+}
+
+.campaign-selector-wrapper select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.campaign-selector-wrapper select option {
+    padding: 4px 6px;
+    line-height: 1.3;
+}
+
+.campaign-selector-wrapper select option:checked {
+    background: #667eea;
+    color: white;
+}
+
+.charts-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 20px;
+}
+
+.individual-chart {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 30px;
+}
+
+.individual-chart:last-child {
+    margin-bottom: 0;
+}
+
+.individual-chart-title {
+    margin: 0 0 15px 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #2c3e50;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e1e8ed;
+}
+
+.individual-chart canvas {
     max-height: 300px;
 }
 
@@ -161,32 +241,14 @@ button {
 .dashboard-header {
     text-align: center;
     margin-bottom: 35px;
-    padding-bottom: 25px;
-    border-bottom: 3px solid #667eea;
-    position: relative;
-}
-
-.dashboard-header::after {
-    content: '';
-    position: absolute;
-    bottom: -3px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100px;
-    height: 3px;
-    background: linear-gradient(90deg, #ffc107 0%, #667eea 50%, #28a745 100%);
 }
 
 .dashboard-header h2 {
     margin: 0 0 10px 0;
-    font-size: 2.5em;
-    font-weight: 800;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 2.2em;
+    font-weight: 700;
+    color: #2c3e50;
     letter-spacing: -0.5px;
-    text-shadow: none;
 }
 
 .dashboard-subtitle {
@@ -305,11 +367,7 @@ button {
     color: #2c3e50;
     font-size: 2.2em;
     font-weight: 700;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+    letter-spacing: -0.5px;
 }
 
 .recommendations-subtitle {
@@ -759,5 +817,22 @@ tr:hover {
 
     .card-container {
         flex-direction: column;
+    }
+
+    .chart-header-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .campaign-selector-wrapper {
+        min-width: 100%;
+    }
+
+    .chart-title-group .chart-title {
+        text-align: center;
+    }
+
+    .chart-title-group .chart-subtitle {
+        text-align: center;
     }
 }
