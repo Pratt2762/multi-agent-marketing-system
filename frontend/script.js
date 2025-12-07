@@ -2,7 +2,7 @@ const RESULTS_FILE = 'results.json';
 let globalData = null;
 let currentWeekIndex = null;
 let roasChart = null;
-let ctrChart = null;
+let cvrChart = null;
 
 function runAgent() {
     document.getElementById('status').innerHTML = '<strong>Please run:</strong> <code>py -m backend.main</code> in your terminal to generate results.json';
@@ -513,7 +513,7 @@ function renderPerformanceCharts() {
     // Always use ALL weeks for the charts (static display)
     const weeks = campaignHistory.map(entry => `Week ${entry.week}`);
 
-    // Build a map of campaign_id -> {name, roas_data[], ctr_data[]}
+    // Build a map of campaign_id -> {name, roas_data[], cvr_data[]}
     const campaignMap = {};
 
     // Initialize campaign map with all campaigns from the first week
@@ -521,7 +521,7 @@ function renderPerformanceCharts() {
         campaignMap[campaign.campaign_id] = {
             name: campaign.campaign_name,
             roasData: [],
-            ctrData: []
+            cvrData: []
         };
     });
 
@@ -533,11 +533,13 @@ function renderPerformanceCharts() {
             // Add ROAS data
             campaignMap[campId].roasData.push(campaign.roas);
 
-            // Add CTR data (calculate from clicks and impressions)
-            const clicks = campaign.weekly_clicks || 0;
-            const impressions = campaign.weekly_impressions || 0;
-            const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
-            campaignMap[campId].ctrData.push(ctr);
+            // Add CVR data (conversion rate percentage)
+            const conversions = campaign.weekly_conversions || 0;
+            const spent = campaign.weekly_budget_spent || 0;
+            // Calculate CVR as conversions per dollar spent (scaled to percentage)
+            // Or we can use a simple metric: conversions as a rate
+            const cvr = spent > 0 ? (conversions / spent) * 100 : 0;
+            campaignMap[campId].cvrData.push(cvr);
         });
     });
 
@@ -554,7 +556,7 @@ function renderPerformanceCharts() {
     // Render both charts with the same selected campaigns (initially show top 5)
     const selectedCampaigns = getSelectedCampaigns();
     renderROASChart(weeks, campaignMap, selectedCampaigns);
-    renderCTRChart(weeks, campaignMap, selectedCampaigns);
+    renderCVRChart(weeks, campaignMap, selectedCampaigns);
 }
 
 function populateCampaignSelector(campaignMap) {
@@ -595,7 +597,7 @@ function populateCampaignSelector(campaignMap) {
 
         // Update both charts with the same selection
         renderROASChart(weeks, campaignMap, selectedCampaigns);
-        renderCTRChart(weeks, campaignMap, selectedCampaigns);
+        renderCVRChart(weeks, campaignMap, selectedCampaigns);
     });
 }
 
@@ -697,12 +699,12 @@ function renderROASChart(weeks, campaignMap, selectedCampaignIds = null) {
     });
 }
 
-function renderCTRChart(weeks, campaignMap, selectedCampaignIds = null) {
-    const ctx = document.getElementById('ctr-chart').getContext('2d');
+function renderCVRChart(weeks, campaignMap, selectedCampaignIds = null) {
+    const ctx = document.getElementById('cvr-chart').getContext('2d');
 
     // Destroy existing chart if it exists
-    if (ctrChart) {
-        ctrChart.destroy();
+    if (cvrChart) {
+        cvrChart.destroy();
     }
 
     // Filter campaigns based on selection
@@ -718,7 +720,7 @@ function renderCTRChart(weeks, campaignMap, selectedCampaignIds = null) {
         const campaign = campaignMap[campaignId];
         return {
             label: campaign.name,
-            data: campaign.ctrData,
+            data: campaign.cvrData,
             borderColor: colors[index],
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -732,7 +734,7 @@ function renderCTRChart(weeks, campaignMap, selectedCampaignIds = null) {
         };
     });
 
-    ctrChart = new Chart(ctx, {
+    cvrChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: weeks,
@@ -773,7 +775,7 @@ function renderCTRChart(weeks, campaignMap, selectedCampaignIds = null) {
                             size: 12
                         },
                         callback: function(value) {
-                            return value + '%';
+                            return value.toFixed(1) + '%';
                         }
                     }
                 },

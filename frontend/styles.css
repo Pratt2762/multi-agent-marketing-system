@@ -11,7 +11,7 @@ body {
 }
 
 header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0066cc 0%, #0080ff 100%);
     color: white;
     padding: 30px 20px;
     text-align: center;
@@ -70,15 +70,20 @@ button {
 }
 
 #visualize {
-    background-color: #667eea;
+    background: linear-gradient(135deg, #0066cc 0%, #0080ff 100%);
     color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+
 #visualize:hover {
-    background-color: #764ba2;
+    background: linear-gradient(135deg, #0052a3 0%, #0066cc 100%);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
+
 
 
 #status {
@@ -107,14 +112,14 @@ button {
     background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
     padding: 30px;
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
-    border: 2px solid rgba(102, 126, 234, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 128, 255, 0.15);
+    border: 2px solid rgba(0, 128, 255, 0.1);
     transition: all 0.3s;
 }
 
 .chart-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 12px 32px rgba(0, 128, 255, 0.2);
 }
 
 .chart-header-container {
@@ -175,8 +180,8 @@ button {
 
 .campaign-selector-wrapper select:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #0080ff;
+    box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.1);
 }
 
 .campaign-selector-wrapper select option {
@@ -185,7 +190,7 @@ button {
 }
 
 .campaign-selector-wrapper select option:checked {
-    background: #667eea;
+    background: #0080ff;
     color: white;
 }
 
@@ -233,9 +238,9 @@ button {
     background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
     padding: 40px;
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 128, 255, 0.15);
     margin-bottom: 40px;
-    border: 2px solid rgba(102, 126, 234, 0.1);
+    border: 2px solid rgba(0, 128, 255, 0.1);
 }
 
 .dashboard-header {
@@ -285,7 +290,7 @@ button {
 }
 
 .action-summary-card.bids-card {
-    border-top: 5px solid #667eea;
+    border-top: 5px solid #0080ff;
 }
 
 .action-summary-card.audience-card {
@@ -312,7 +317,7 @@ button {
 .card-total {
     font-size: 2.5em;
     font-weight: bold;
-    color: #667eea;
+    color: #0080ff;
     margin: 10px 0;
 }
 
@@ -346,7 +351,7 @@ button {
 }
 
 .action-item.neutral .action-count {
-    color: #667eea;
+    color: #0080ff;
 }
 
 .action-item.negative .action-count {
@@ -392,7 +397,7 @@ button {
 }
 
 .bids-section {
-    border-left: 6px solid #667eea;
+    border-left: 6px solid #0080ff;
 }
 
 .audience-section {
@@ -407,9 +412,10 @@ button {
 
 .section-header h3 {
     margin: 0 0 5px 0;
-    color: #2c3e50;
-    font-size: 1.4em;
-    font-weight: 600;
+    color: #0080ff;
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.3px;
 }
 
 .section-subtitle {
@@ -476,7 +482,7 @@ button {
     width: 100%;
     padding: 10px 16px;
     margin-top: 10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0066cc 0%, #0080ff 100%);
     color: white;
     border: none;
     border-radius: 6px;
@@ -489,11 +495,11 @@ button {
 
 .view-all-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 128, 255, 0.3);
 }
 
 .view-all-btn.expanded {
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    background: linear-gradient(135deg, #0080ff 0%, #0066cc 100%);
 }
 
 .recommendation-item:hover {
@@ -572,7 +578,7 @@ button {
 /* AI EXPLANATION PANEL */
 /* ==================== */
 #ai-explanation {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0066cc 0%, #0080ff 100%);
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -621,7 +627,7 @@ button {
 }
 
 .collapsible-section h2:hover {
-    color: #667eea;
+    color: #0080ff;
 }
 
 .toggle-icon {
@@ -742,7 +748,7 @@ tr:hover {
 
 #campaign-select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #0080ff;
 }
 
 /* ==================== */
@@ -753,6 +759,16 @@ tr:hover {
     align-items: center;
     justify-content: center;
     gap: 15px;
+    position: relative;
+}
+
+.controls-row #visualize {
+    margin: 0 auto;
+}
+
+.controls-row #week-navigator {
+    position: absolute;
+    right: 0;
 }
 
 #week-navigator {
@@ -767,7 +783,7 @@ tr:hover {
 
 #prev-week, #next-week {
     padding: 8px 12px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0066cc 0%, #0080ff 100%);
     color: white;
     border: none;
     border-radius: 6px;
@@ -781,7 +797,7 @@ tr:hover {
 
 #prev-week:hover:not(:disabled), #next-week:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 128, 255, 0.3);
 }
 
 #prev-week:disabled, #next-week:disabled {
@@ -792,7 +808,7 @@ tr:hover {
 #current-week-display {
     font-size: 1.1em;
     font-weight: 600;
-    color: #667eea;
+    color: #0080ff;
     min-width: 80px;
     text-align: center;
 }

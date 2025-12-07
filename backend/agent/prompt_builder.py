@@ -160,6 +160,11 @@ YOUR TASK:
 
 Produce output strictly in this JSON format (valid JSON only, no explanations outside):
 
+CRITICAL: You MUST provide recommendations for EVERY SINGLE ad group and audience in the current state.
+- For ad groups: Return exactly one action for EACH ad_group_id in the state (all {len(state.get('ad_groups', []))} ad groups)
+- For audiences: Return exactly one action for EACH audience_id in the state (all {len(state.get('audiences', []))} audiences)
+- DO NOT skip any entities - even if action is "no_change", you must include it
+
 CRITICAL REQUIREMENTS FOR "reason" FIELDS:
 - MUST include specific numerical metrics (momentum %, rank, percentile, distance from mean)
 - MUST reference trend direction (improving/declining/stable)
