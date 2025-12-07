@@ -5,6 +5,7 @@ from backend.agent.prompt_builder import build_prompt
 from backend.agent.state_manager import get_latest_week_state
 from backend.logic.logger import agent_logger # Import the global logger
 from backend.logic.budget_allocator import calculate_budget_actions
+from backend.logic.action_calculator import calculate_bid_change
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -83,22 +84,69 @@ class PolicyAgent:
         audience_actions = llm_decisions.get("audience_targeting_actions", [])
         balanced_audience_actions = self._balance_audience_actions(audience_actions, state)
 
-        # 6. Combine custom budget logic with LLM decisions
+        # 6. Add quantitative calculations to bid actions
+        bid_actions = llm_decisions.get("ad_group_bid_actions", [])
+        bid_actions_with_amounts = self._add_bid_amounts(bid_actions, state)
+
+        # 7. Combine custom budget logic with LLM decisions
         combined_decisions = {
-            "campaign_budget_actions": budget_actions,  # From custom logic
-            "ad_group_bid_actions": llm_decisions.get("ad_group_bid_actions", []),  # From LLM
+            "campaign_budget_actions": budget_actions,  # From custom logic (with amounts)
+            "ad_group_bid_actions": bid_actions_with_amounts,  # From LLM (with amounts added)
             "audience_targeting_actions": balanced_audience_actions,  # From LLM (balanced)
             "explanation": llm_decisions.get("explanation", "Hybrid optimization: budget via ranking, bids and audiences via AI analysis")
         }
 
-        # 7. Finalize logger step
+        # 8. Finalize logger step
         agent_logger.end_step()
 
-        # 8. Return combined recommendations and log history
+        # 9. Return combined recommendations and log history
         return {
             "decisions": combined_decisions,
             "log_history": agent_logger.get_history() # Return the full log history
         }
+
+    def _add_bid_amounts(self, bid_actions, state):
+        """
+        Adds quantitative bid change calculations to each bid action.
+
+        Args:
+            bid_actions: List of bid action dicts from LLM (with qualitative actions)
+            state: Current state with ad group data
+
+        Returns:
+            List of bid actions enriched with quantitative bid_change field
+        """
+        if not bid_actions:
+            return bid_actions
+
+        # Get ad groups from state for current bids
+        ad_groups = state.get('ad_groups', [])
+        ad_group_map = {ag['ad_group_id']: ag for ag in ad_groups}
+
+        # Add quantitative calculations to each action
+        for action in bid_actions:
+            ad_group_id = action.get('ad_group_id')
+            action_type = action.get('type')
+
+            if ad_group_id in ad_group_map:
+                ad_group = ad_group_map[ad_group_id]
+                current_bid = ad_group.get('avg_bid', 0)
+
+                # Calculate bid change using 3-tier system
+                bid_change = calculate_bid_change(
+                    action_type,
+                    current_bid,
+                    {
+                        'momentum_3week': ad_group.get('momentum_3week', 0),
+                        'trend_consistency': ad_group.get('trend_consistency', 'stable'),
+                        'rank': ad_group.get('rank', 50)
+                    }
+                )
+
+                # Add to action
+                action['bid_change'] = bid_change
+
+        return bid_actions
 
     def _balance_audience_actions(self, audience_actions, state):
         """
@@ -150,7 +198,7 @@ class PolicyAgent:
                     break
                 if action['type'] in ['no_change', 'suppress']:
                     action['type'] = 'activate'
-                    action['reason'] = f"Premium audience health profile (rank-based activation); strategic activation maintains minimum engagement despite market conditions"
+                    action['reason'] = "This audience segment demonstrates premium health characteristics and strong engagement potential. Strategic activation maintains critical market reach and ensures baseline audience engagement even in challenging market conditions, preserving brand visibility across high-value segments."
                     needed -= 1
 
         # CASE 2: Too many activations (> 5)
@@ -162,7 +210,7 @@ class PolicyAgent:
                     break
                 if action['type'] == 'activate':
                     action['type'] = 'no_change'
-                    action['reason'] = f"Moderate audience health; sustained targeting maintains baseline reach while preventing over-activation"
+                    action['reason'] = "This audience exhibits moderate health metrics that support maintaining current targeting levels. Sustained engagement at baseline prevents over-activation risks while preserving reach capacity for strategic deployment when performance signals strengthen."
                     excess -= 1
 
         # CASE 3: Too few suppressions (< 2)
@@ -174,7 +222,7 @@ class PolicyAgent:
                     break
                 if action['type'] in ['no_change', 'activate']:
                     action['type'] = 'suppress'
-                    action['reason'] = f"Deteriorating audience vitality (rank-based suppression); strategic suppression prevents budget waste on underperforming segments"
+                    action['reason'] = "This audience segment shows deteriorating vitality metrics and declining engagement indicators. Strategic suppression prevents inefficient budget allocation on underperforming segments, allowing resource reallocation to audiences demonstrating stronger conversion potential and healthier engagement dynamics."
                     needed -= 1
 
         # CASE 4: Too many suppressions (> 5)
@@ -186,7 +234,7 @@ class PolicyAgent:
                     break
                 if action['type'] == 'suppress':
                     action['type'] = 'no_change'
-                    action['reason'] = f"Balanced audience health; sustained targeting maintains reach opportunity while managing fatigue risk"
+                    action['reason'] = "This audience demonstrates balanced health characteristics that warrant sustained targeting at current levels. Maintaining reach opportunity preserves market penetration while carefully managing fatigue risk through controlled exposure frequency and ongoing performance monitoring."
                     excess -= 1
 
         return audience_actions

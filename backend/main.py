@@ -52,8 +52,10 @@ def run_agent_and_save_results():
     print(f"[OK] Total audiences: {len(data['audiences']['audience_id'].unique())}")
     print(f"[OK] Weeks to process: {max_week}")
 
-    # 2. Run the 12-week simulation
-    print(f"\nStarting AI-powered analysis for {max_week} weeks...")
+    # 2. Run the simulation starting from week 3 (requires 3 weeks of data for trend analysis)
+    START_WEEK = 3  # Start from week 3 to have 3 weeks of historical data
+    print(f"\nStarting AI-powered analysis for weeks {START_WEEK}-{max_week}...")
+    print(f"[INFO] Skipping weeks 1-2 (insufficient historical data for 3-week trend analysis)")
     print("-" * 80)
 
     agent = PolicyAgent()
@@ -61,9 +63,26 @@ def run_agent_and_save_results():
         campaign_history = []
         total_start_time = time.time()
 
-        # The initial state is the performance data for week 1
-        # The loop runs from week 1 up to the max_week (12)
-        for week in range(1, max_week + 1):
+        # Store weeks 1-2 state snapshots without recommendations
+        print(f"\nCollecting baseline data for weeks 1-2...")
+        for week in range(1, START_WEEK):
+            baseline_state = get_state_for_week(data, week)
+            history_entry = {
+                "week": week,
+                "state_snapshot": baseline_state,
+                "recommendations": {
+                    "campaign_budget_actions": [],
+                    "ad_group_bid_actions": [],
+                    "audience_targeting_actions": [],
+                    "explanation": f"Week {week}: Baseline data collection - insufficient historical data for 3-week trend analysis. Recommendations start from week {START_WEEK}."
+                },
+                "log_history": []
+            }
+            campaign_history.append(history_entry)
+            print(f"   Week {week}: Baseline collected (no recommendations)")
+
+        # The loop runs from week 3 up to the max_week (12)
+        for week in range(START_WEEK, max_week + 1):
             week_start_time = time.time()
             print(f"\nProcessing Week {week}/{max_week}...", end=" ", flush=True)
 
@@ -140,7 +159,8 @@ def run_agent_and_save_results():
             print("=" * 80)
             print(f"\nSummary:")
             print(f"   - Processed {max_week} weeks of campaign data")
-            print(f"   - Generated {max_week} sets of intelligent recommendations")
+            print(f"   - Generated {max_week - START_WEEK + 1} sets of intelligent recommendations (weeks {START_WEEK}-{max_week})")
+            print(f"   - Weeks 1-2: Baseline data collection only (no recommendations)")
             print(f"   - Analyzed {len(data['campaigns']['campaign_id'].unique())} campaigns")
             print(f"   - Optimized {len(data['ad_groups']['ad_group_id'].unique())} ad groups")
             print(f"   - Evaluated {len(data['audiences']['audience_id'].unique())} audience segments")

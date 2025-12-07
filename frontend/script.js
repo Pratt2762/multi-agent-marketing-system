@@ -21,6 +21,60 @@ function toggleSection(sectionId) {
 }
 
 // ===========================================
+// Currency Formatting Helper
+// ===========================================
+function formatIndianCurrency(amount) {
+    // Convert to thousands, lakhs or crores as appropriate
+    if (amount >= 10000000) { // 1 crore or more
+        return `₹${(amount / 10000000).toFixed(2)}Cr`;
+    } else if (amount >= 100000) { // 1 lakh or more
+        return `₹${(amount / 100000).toFixed(2)}L`;
+    } else if (amount >= 1000) { // 1 thousand or more
+        return `₹${(amount / 1000).toFixed(2)}K`;
+    } else {
+        return `₹${amount.toFixed(2)}`;
+    }
+}
+
+// ===========================================
+// Implementation Status/Button Helper
+// ===========================================
+function getImplementationHtml(changeData, actionId, actionType) {
+    // changeData is budget_change or bid_change object
+    // actionType is 'budget' or 'bid'
+
+    if (!changeData || !changeData.tier) {
+        return '';
+    }
+
+    const tier = changeData.tier;
+
+    // For high tier (20%), show implementation button
+    if (tier === 'high') {
+        return `<button class="implement-btn" onclick="handleImplement('${actionId}', '${actionType}', event)">Implement</button>`;
+    }
+
+    // For moderate (10%) and low (5%) tiers, show "Implemented" status in italic
+    if (tier === 'moderate' || tier === 'low') {
+        return `<div class="implemented-status">Implemented</div>`;
+    }
+
+    return '';
+}
+
+// ===========================================
+// Handle Implementation Button Click
+// ===========================================
+function handleImplement(actionId, actionType, event) {
+    // Find the button and replace it with "Implemented" status
+    const button = event.target;
+    button.outerHTML = `<div class="implemented-status success">Implemented</div>`;
+
+    // Optional: You can also log this action or send to backend
+    console.log(`Implemented ${actionType} recommendation for ID: ${actionId}`);
+}
+
+// ===========================================
 // NEW: Executive Dashboard with Action Counts
 // ===========================================
 function renderActionSummaryCards(recommendations) {
@@ -125,15 +179,22 @@ function renderBudgetSection(budgetActions, finalState) {
         const displayCount = Math.min(3, increases.length);
         positiveHtml += `<ul class="recommendation-list" data-total="${increases.length}" data-visible="${displayCount}">`;
         increases.slice(0, displayCount).forEach(action => {
+            const budgetChangeHtml = action.budget_change ?
+                `<span class="budget-amount increase">Increase budget from ${formatIndianCurrency(action.budget_change.current)} to ${formatIndianCurrency(action.budget_change.new)}</span>`
+                : '';
+            const implementationHtml = getImplementationHtml(action.budget_change, action.campaign_id, 'budget');
             positiveHtml += `
                 <li class="recommendation-item">
                     <div class="item-header">
                         <strong>${action.campaign_name}</strong>
-                        <span class="item-badge positive">+${action.rank}</span>
+                        ${budgetChangeHtml}
                     </div>
                     <div class="item-metrics">
-                        <span class="metric">ROAS: <strong>${action.roas}</strong></span>
-                        <span class="metric">Rank: <strong>#${action.rank}/${budgetActions.length}</strong></span>
+                        <div style="display: flex; gap: 15px;">
+                            <span class="metric">ROAS: <strong>${action.roas}</strong></span>
+                            <span class="metric">Rank: <strong>#${action.rank}/${budgetActions.length}</strong></span>
+                        </div>
+                        ${implementationHtml}
                     </div>
                     <div class="item-reason">${action.reason}</div>
                 </li>
@@ -141,15 +202,22 @@ function renderBudgetSection(budgetActions, finalState) {
         });
         // Add hidden items
         increases.slice(displayCount).forEach(action => {
+            const budgetChangeHtml = action.budget_change ?
+                `<span class="budget-amount increase">Increase budget from ${formatIndianCurrency(action.budget_change.current)} to ${formatIndianCurrency(action.budget_change.new)}</span>`
+                : '';
+            const implementationHtml = getImplementationHtml(action.budget_change, action.campaign_id, 'budget');
             positiveHtml += `
                 <li class="recommendation-item hidden-item" style="display: none;">
                     <div class="item-header">
                         <strong>${action.campaign_name}</strong>
-                        <span class="item-badge positive">+${action.rank}</span>
+                        ${budgetChangeHtml}
                     </div>
                     <div class="item-metrics">
-                        <span class="metric">ROAS: <strong>${action.roas}</strong></span>
-                        <span class="metric">Rank: <strong>#${action.rank}/${budgetActions.length}</strong></span>
+                        <div style="display: flex; gap: 15px;">
+                            <span class="metric">ROAS: <strong>${action.roas}</strong></span>
+                            <span class="metric">Rank: <strong>#${action.rank}/${budgetActions.length}</strong></span>
+                        </div>
+                        ${implementationHtml}
                     </div>
                     <div class="item-reason">${action.reason}</div>
                 </li>
@@ -169,15 +237,22 @@ function renderBudgetSection(budgetActions, finalState) {
         const displayCount = Math.min(3, decreases.length);
         negativeHtml += `<ul class="recommendation-list" data-total="${decreases.length}" data-visible="${displayCount}">`;
         decreases.slice(0, displayCount).forEach(action => {
+            const budgetChangeHtml = action.budget_change ?
+                `<span class="budget-amount decrease">Decrease budget from ${formatIndianCurrency(action.budget_change.current)} to ${formatIndianCurrency(action.budget_change.new)}</span>`
+                : '';
+            const implementationHtml = getImplementationHtml(action.budget_change, action.campaign_id, 'budget');
             negativeHtml += `
                 <li class="recommendation-item">
                     <div class="item-header">
                         <strong>${action.campaign_name}</strong>
-                        <span class="item-badge negative">-${action.rank}</span>
+                        ${budgetChangeHtml}
                     </div>
                     <div class="item-metrics">
-                        <span class="metric">ROAS: <strong>${action.roas}</strong></span>
-                        <span class="metric">Rank: <strong>#${action.rank}/${budgetActions.length}</strong></span>
+                        <div style="display: flex; gap: 15px;">
+                            <span class="metric">ROAS: <strong>${action.roas}</strong></span>
+                            <span class="metric">Rank: <strong>#${action.rank}/${budgetActions.length}</strong></span>
+                        </div>
+                        ${implementationHtml}
                     </div>
                     <div class="item-reason">${action.reason}</div>
                 </li>
@@ -185,15 +260,22 @@ function renderBudgetSection(budgetActions, finalState) {
         });
         // Add hidden items
         decreases.slice(displayCount).forEach(action => {
+            const budgetChangeHtml = action.budget_change ?
+                `<span class="budget-amount decrease">Decrease budget from ${formatIndianCurrency(action.budget_change.current)} to ${formatIndianCurrency(action.budget_change.new)}</span>`
+                : '';
+            const implementationHtml = getImplementationHtml(action.budget_change, action.campaign_id, 'budget');
             negativeHtml += `
                 <li class="recommendation-item hidden-item" style="display: none;">
                     <div class="item-header">
                         <strong>${action.campaign_name}</strong>
-                        <span class="item-badge negative">-${action.rank}</span>
+                        ${budgetChangeHtml}
                     </div>
                     <div class="item-metrics">
-                        <span class="metric">ROAS: <strong>${action.roas}</strong></span>
-                        <span class="metric">Rank: <strong>#${action.rank}/${budgetActions.length}</strong></span>
+                        <div style="display: flex; gap: 15px;">
+                            <span class="metric">ROAS: <strong>${action.roas}</strong></span>
+                            <span class="metric">Rank: <strong>#${action.rank}/${budgetActions.length}</strong></span>
+                        </div>
+                        ${implementationHtml}
                     </div>
                     <div class="item-reason">${action.reason}</div>
                 </li>
@@ -223,16 +305,23 @@ function renderBidsSection(bidActions, finalState) {
         positiveHtml += `<ul class="recommendation-list" data-total="${raises.length}" data-visible="${displayCount}">`;
         raises.slice(0, displayCount).forEach(action => {
             const adGroup = finalState.ad_groups.find(ag => ag.ad_group_id === action.ad_group_id);
+            const bidChangeHtml = action.bid_change ?
+                `<span class="bid-amount increase">Raise bid from ${formatIndianCurrency(action.bid_change.current)} to ${formatIndianCurrency(action.bid_change.new)}</span>`
+                : '';
+            const implementationHtml = getImplementationHtml(action.bid_change, action.ad_group_id, 'bid');
             positiveHtml += `
                 <li class="recommendation-item">
                     <div class="item-header">
                         <strong>Ad Group ${action.ad_group_id}</strong>
-                        ${adGroup ? `<span class="item-detail">${adGroup.ad_group_name}</span>` : ''}
+                        ${bidChangeHtml}
                     </div>
                     ${adGroup ? `
                     <div class="item-metrics">
-                        <span class="metric">ROAS: <strong>${adGroup.roas.toFixed(2)}</strong></span>
-                        <span class="metric">Bid: <strong>$${adGroup.avg_bid.toFixed(2)}</strong></span>
+                        <div style="display: flex; gap: 15px;">
+                            <span class="metric">ROAS: <strong>${adGroup.roas.toFixed(2)}</strong></span>
+                            <span class="metric">Bid: <strong>$${adGroup.avg_bid.toFixed(2)}</strong></span>
+                        </div>
+                        ${implementationHtml}
                     </div>
                     ` : ''}
                     <div class="item-reason">${action.reason}</div>
@@ -242,16 +331,23 @@ function renderBidsSection(bidActions, finalState) {
         // Add hidden items
         raises.slice(displayCount).forEach(action => {
             const adGroup = finalState.ad_groups.find(ag => ag.ad_group_id === action.ad_group_id);
+            const bidChangeHtml = action.bid_change ?
+                `<span class="bid-amount increase">Raise bid from ${formatIndianCurrency(action.bid_change.current)} to ${formatIndianCurrency(action.bid_change.new)}</span>`
+                : '';
+            const implementationHtml = getImplementationHtml(action.bid_change, action.ad_group_id, 'bid');
             positiveHtml += `
                 <li class="recommendation-item hidden-item" style="display: none;">
                     <div class="item-header">
                         <strong>Ad Group ${action.ad_group_id}</strong>
-                        ${adGroup ? `<span class="item-detail">${adGroup.ad_group_name}</span>` : ''}
+                        ${bidChangeHtml}
                     </div>
                     ${adGroup ? `
                     <div class="item-metrics">
-                        <span class="metric">ROAS: <strong>${adGroup.roas.toFixed(2)}</strong></span>
-                        <span class="metric">Bid: <strong>$${adGroup.avg_bid.toFixed(2)}</strong></span>
+                        <div style="display: flex; gap: 15px;">
+                            <span class="metric">ROAS: <strong>${adGroup.roas.toFixed(2)}</strong></span>
+                            <span class="metric">Bid: <strong>$${adGroup.avg_bid.toFixed(2)}</strong></span>
+                        </div>
+                        ${implementationHtml}
                     </div>
                     ` : ''}
                     <div class="item-reason">${action.reason}</div>
@@ -273,16 +369,23 @@ function renderBidsSection(bidActions, finalState) {
         negativeHtml += `<ul class="recommendation-list" data-total="${lowers.length}" data-visible="${displayCount}">`;
         lowers.slice(0, displayCount).forEach(action => {
             const adGroup = finalState.ad_groups.find(ag => ag.ad_group_id === action.ad_group_id);
+            const bidChangeHtml = action.bid_change ?
+                `<span class="bid-amount decrease">Lower bid from ${formatIndianCurrency(action.bid_change.current)} to ${formatIndianCurrency(action.bid_change.new)}</span>`
+                : '';
+            const implementationHtml = getImplementationHtml(action.bid_change, action.ad_group_id, 'bid');
             negativeHtml += `
                 <li class="recommendation-item">
                     <div class="item-header">
                         <strong>Ad Group ${action.ad_group_id}</strong>
-                        ${adGroup ? `<span class="item-detail">${adGroup.ad_group_name}</span>` : ''}
+                        ${bidChangeHtml}
                     </div>
                     ${adGroup ? `
                     <div class="item-metrics">
-                        <span class="metric">ROAS: <strong>${adGroup.roas.toFixed(2)}</strong></span>
-                        <span class="metric">Bid: <strong>$${adGroup.avg_bid.toFixed(2)}</strong></span>
+                        <div style="display: flex; gap: 15px;">
+                            <span class="metric">ROAS: <strong>${adGroup.roas.toFixed(2)}</strong></span>
+                            <span class="metric">Bid: <strong>$${adGroup.avg_bid.toFixed(2)}</strong></span>
+                        </div>
+                        ${implementationHtml}
                     </div>
                     ` : ''}
                     <div class="item-reason">${action.reason}</div>
@@ -292,16 +395,23 @@ function renderBidsSection(bidActions, finalState) {
         // Add hidden items
         lowers.slice(displayCount).forEach(action => {
             const adGroup = finalState.ad_groups.find(ag => ag.ad_group_id === action.ad_group_id);
+            const bidChangeHtml = action.bid_change ?
+                `<span class="bid-amount decrease">Lower bid from ${formatIndianCurrency(action.bid_change.current)} to ${formatIndianCurrency(action.bid_change.new)}</span>`
+                : '';
+            const implementationHtml = getImplementationHtml(action.bid_change, action.ad_group_id, 'bid');
             negativeHtml += `
                 <li class="recommendation-item hidden-item" style="display: none;">
                     <div class="item-header">
                         <strong>Ad Group ${action.ad_group_id}</strong>
-                        ${adGroup ? `<span class="item-detail">${adGroup.ad_group_name}</span>` : ''}
+                        ${bidChangeHtml}
                     </div>
                     ${adGroup ? `
                     <div class="item-metrics">
-                        <span class="metric">ROAS: <strong>${adGroup.roas.toFixed(2)}</strong></span>
-                        <span class="metric">Bid: <strong>$${adGroup.avg_bid.toFixed(2)}</strong></span>
+                        <div style="display: flex; gap: 15px;">
+                            <span class="metric">ROAS: <strong>${adGroup.roas.toFixed(2)}</strong></span>
+                            <span class="metric">Bid: <strong>$${adGroup.avg_bid.toFixed(2)}</strong></span>
+                        </div>
+                        ${implementationHtml}
                     </div>
                     ` : ''}
                     <div class="item-reason">${action.reason}</div>
