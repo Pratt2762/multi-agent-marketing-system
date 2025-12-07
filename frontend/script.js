@@ -1,8 +1,11 @@
 const RESULTS_FILE = 'results.json';
 let globalData = null;
+let fullData = null; // Store complete data including week 12
 let currentWeekIndex = null;
 let roasChart = null;
 let cvrChart = null;
+let demoMode = true; // Start in demo mode (hide week 12 initially)
+let agentRunning = false; // Track if agent is running
 
 function runAgent() {
     document.getElementById('status').innerHTML = '<strong>Please run:</strong> <code>py -m backend.main</code> in your terminal to generate results.json';
@@ -683,13 +686,22 @@ function populateCampaignSelector(campaignMap) {
         return avgRoasB - avgRoasA;
     });
 
+    // Default campaigns to select (names ending with 25, 16, 19, 8)
+    const defaultCampaignNames = [
+        'MSIL Festive Campaign 25',
+        'Maruti Launch Campaign 16',
+        'MSIL Festive Campaign 19',
+        'MSIL Exchange Campaign 8'
+    ];
+
     // Populate selector
-    campaignIds.forEach((campaignId, index) => {
+    campaignIds.forEach((campaignId) => {
         const campaign = campaignMap[campaignId];
         const option = document.createElement('option');
         option.value = campaignId;
         option.textContent = campaign.name;
-        option.selected = index < 5; // Select top 5 by default
+        // Select campaigns that match the default names
+        option.selected = defaultCampaignNames.includes(campaign.name);
 
         newSelect.appendChild(option);
     });
@@ -967,13 +979,86 @@ function updateWeekDisplay(weekIndex) {
 // Main Load Function
 // ===========================================
 function loadResults() {
+    // If agent is already running, prevent duplicate runs
+    if (agentRunning) {
+        return;
+    }
+
+    // If demo mode is active and we haven't loaded full data yet, trigger the demo run
+    if (demoMode && !fullData) {
+        // First time load - load everything but only show weeks 1-11
+        loadInitialData();
+    } else if (demoMode && fullData) {
+        // Demo mode active with full data loaded - run the 2-minute simulation
+        runDemoAgentSimulation();
+    } else {
+        // Normal load (not in demo mode)
+        loadAllData();
+    }
+}
+
+function loadInitialData() {
     fetch(RESULTS_FILE)
         .then(response => {
             if (!response.ok) throw new Error('Results file not found');
             return response.json();
         })
         .then(data => {
-            console.log('Data loaded:', data);
+            console.log('Initial data loaded:', data);
+
+            // Validate data structure
+            if (!data || !data.campaign_history || !Array.isArray(data.campaign_history)) {
+                throw new Error('Invalid data structure: campaign_history missing or not an array');
+            }
+
+            if (data.campaign_history.length === 0) {
+                throw new Error('campaign_history is empty');
+            }
+
+            if (!data.campaign_history[0].state_snapshot) {
+                throw new Error('state_snapshot missing from first week');
+            }
+
+            if (!Array.isArray(data.campaign_history[0].state_snapshot.campaigns)) {
+                throw new Error('campaigns is not an array: ' + typeof data.campaign_history[0].state_snapshot.campaigns);
+            }
+
+            // Store the full data (including week 12)
+            fullData = data;
+
+            // Create a copy with only weeks 1-11 (exclude the last week)
+            const limitedData = {
+                ...data,
+                campaign_history: data.campaign_history.slice(0, -1) // Remove last week
+            };
+
+            globalData = limitedData;
+
+            // Render static performance charts (with weeks 1-11 only)
+            renderPerformanceCharts();
+
+            // Initialize week navigator (weeks 1-11 only)
+            initializeWeekNavigator();
+
+            // Display week 11 (the latest available in demo mode)
+            updateWeekDisplay(globalData.campaign_history.length - 1);
+
+            document.getElementById('status').innerHTML = '';
+        })
+        .catch(error => {
+            console.error('Load error:', error);
+            document.getElementById('status').innerHTML = `<strong>Error:</strong> ${error.message}. Please run the backend first.`;
+        });
+}
+
+function loadAllData() {
+    fetch(RESULTS_FILE)
+        .then(response => {
+            if (!response.ok) throw new Error('Results file not found');
+            return response.json();
+        })
+        .then(data => {
+            console.log('Full data loaded:', data);
 
             // Validate data structure
             if (!data || !data.campaign_history || !Array.isArray(data.campaign_history)) {
@@ -993,8 +1078,9 @@ function loadResults() {
             }
 
             globalData = data;
+            fullData = data;
 
-            // Render static performance charts (once, with all weeks)
+            // Render static performance charts (all weeks)
             renderPerformanceCharts();
 
             // Initialize week navigator
@@ -1009,6 +1095,63 @@ function loadResults() {
             console.error('Load error:', error);
             document.getElementById('status').innerHTML = `<strong>Error:</strong> ${error.message}. Please run the backend first.`;
         });
+}
+
+function runDemoAgentSimulation() {
+    agentRunning = true;
+
+    // Update button to show running state
+    const button = document.getElementById('visualize');
+    button.disabled = true;
+    button.style.opacity = '0.7';
+    button.style.cursor = 'not-allowed';
+
+    // Show running status
+    const statusDiv = document.getElementById('status');
+
+    statusDiv.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 1.2em; font-weight: 500; font-style: italic; color: #6c757d;">
+                AI Agent Running - Analyzing Latest Week Data...
+            </div>
+        </div>
+    `;
+
+    // After 2 minutes, reveal week 12
+    setTimeout(() => {
+        // Update globalData to include week 12
+        globalData = fullData;
+        demoMode = false;
+        agentRunning = false;
+
+        // Reset button
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
+        button.textContent = 'Analysis Complete ✓';
+        button.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+
+        // Show success message
+        statusDiv.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #28a745; font-size: 1.1em; font-weight: 600;">
+                ✅ Week 12 Analysis Complete! New recommendations available.
+            </div>
+        `;
+
+        // Re-render charts with all weeks including week 12
+        renderPerformanceCharts();
+
+        // Re-initialize week navigator to include week 12
+        initializeWeekNavigator();
+
+        // Display week 12
+        updateWeekDisplay(globalData.campaign_history.length - 1);
+
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+            statusDiv.innerHTML = '';
+        }, 3000);
+    }, 120000); // 120 seconds = 2 minutes
 }
 
 // Auto-load results when page loads
