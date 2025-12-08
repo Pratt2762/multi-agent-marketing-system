@@ -128,7 +128,7 @@ def enrich_ad_groups(ad_groups, ad_groups_df, current_week):
     current_week_df = ad_groups_df[ad_groups_df['week'] == current_week].copy()
 
     # Calculate rankings by ROAS
-    current_week_df = current_week_df.sort_values('roas', ascending=False)
+    current_week_df = current_week_df.sort_values('roas', ascending=False).reset_index(drop=True)
     total_ad_groups = len(current_week_df)
 
     enrichment_map = {}
@@ -190,7 +190,7 @@ def enrich_audiences(audiences, audiences_df, current_week):
     )
 
     # Sort by health score
-    current_week_df = current_week_df.sort_values('composite_health_score', ascending=False)
+    current_week_df = current_week_df.sort_values('composite_health_score', ascending=False).reset_index(drop=True)
     total_audiences = len(current_week_df)
 
     enrichment_map = {}

@@ -176,6 +176,18 @@ function renderBudgetSection(budgetActions, finalState) {
     const increases = budgetActions.filter(a => a.type === 'increase');
     const decreases = budgetActions.filter(a => a.type === 'decrease');
 
+    // Sort by absolute budget change amount (descending - largest changes first)
+    increases.sort((a, b) => {
+        const changeA = Math.abs(a.budget_change?.change_amount || 0);
+        const changeB = Math.abs(b.budget_change?.change_amount || 0);
+        return changeB - changeA;
+    });
+    decreases.sort((a, b) => {
+        const changeA = Math.abs(a.budget_change?.change_amount || 0);
+        const changeB = Math.abs(b.budget_change?.change_amount || 0);
+        return changeB - changeA;
+    });
+
     // Render positive column (increases)
     let positiveHtml = '<h4 class="section-title positive">Top Performers (Increase Budget)</h4>';
     if (increases.length > 0) {
@@ -300,6 +312,18 @@ function renderBidsSection(bidActions, finalState) {
     // Separate by action type
     const raises = bidActions.filter(a => a.type === 'raise_bid');
     const lowers = bidActions.filter(a => a.type === 'lower_bid');
+
+    // Sort by absolute bid change amount (descending - largest changes first)
+    raises.sort((a, b) => {
+        const changeA = Math.abs(a.bid_change?.change_amount || 0);
+        const changeB = Math.abs(b.bid_change?.change_amount || 0);
+        return changeB - changeA;
+    });
+    lowers.sort((a, b) => {
+        const changeA = Math.abs(a.bid_change?.change_amount || 0);
+        const changeB = Math.abs(b.bid_change?.change_amount || 0);
+        return changeB - changeA;
+    });
 
     // Render positive column (raises)
     let positiveHtml = '<h4 class="section-title positive">High Performers (Raise Bid)</h4>';
@@ -438,6 +462,24 @@ function renderAudiencesSection(audienceActions, finalState) {
     const activates = audienceActions.filter(a => a.type === 'activate');
     const suppresses = audienceActions.filter(a => a.type === 'suppress');
 
+    // Sort by composite health score for maximum impact
+    // Activates: Highest health score first (show best audiences)
+    activates.sort((a, b) => {
+        const audienceA = finalState.audiences.find(au => au.audience_id === a.audience_id);
+        const audienceB = finalState.audiences.find(au => au.audience_id === b.audience_id);
+        const scoreA = audienceA?.composite_health_score || 0;
+        const scoreB = audienceB?.composite_health_score || 0;
+        return scoreB - scoreA; // Descending (highest first)
+    });
+    // Suppresses: Lowest health score first (show worst audiences)
+    suppresses.sort((a, b) => {
+        const audienceA = finalState.audiences.find(au => au.audience_id === a.audience_id);
+        const audienceB = finalState.audiences.find(au => au.audience_id === b.audience_id);
+        const scoreA = audienceA?.composite_health_score || 0;
+        const scoreB = audienceB?.composite_health_score || 0;
+        return scoreA - scoreB; // Ascending (lowest first)
+    });
+
     // Render positive column (activates)
     let positiveHtml = '<h4 class="section-title positive">Best Health (Activate)</h4>';
     if (activates.length > 0) {
@@ -453,9 +495,10 @@ function renderAudiencesSection(audienceActions, finalState) {
                     </div>
                     ${audience ? `
                     <div class="item-metrics">
+                        <span class="metric">Health Score: <strong>${audience.composite_health_score.toFixed(1)}</strong></span>
                         <span class="metric">Intent: <strong>${audience.intent_score}</strong></span>
-                        <span class="metric">Fatigue: <strong>${audience.fatigue_score.toFixed(1)}</strong></span>
                         <span class="metric">CTR: <strong>${(audience.avg_ctr * 100).toFixed(2)}%</strong></span>
+                        <span class="metric">Fatigue: <strong>${audience.fatigue_score.toFixed(1)}</strong></span>
                     </div>
                     ` : ''}
                     <div class="item-reason">${action.reason}</div>
@@ -473,9 +516,10 @@ function renderAudiencesSection(audienceActions, finalState) {
                     </div>
                     ${audience ? `
                     <div class="item-metrics">
+                        <span class="metric">Health Score: <strong>${audience.composite_health_score.toFixed(1)}</strong></span>
                         <span class="metric">Intent: <strong>${audience.intent_score}</strong></span>
-                        <span class="metric">Fatigue: <strong>${audience.fatigue_score.toFixed(1)}</strong></span>
                         <span class="metric">CTR: <strong>${(audience.avg_ctr * 100).toFixed(2)}%</strong></span>
+                        <span class="metric">Fatigue: <strong>${audience.fatigue_score.toFixed(1)}</strong></span>
                     </div>
                     ` : ''}
                     <div class="item-reason">${action.reason}</div>
@@ -505,9 +549,10 @@ function renderAudiencesSection(audienceActions, finalState) {
                     </div>
                     ${audience ? `
                     <div class="item-metrics">
+                        <span class="metric">Health Score: <strong>${audience.composite_health_score.toFixed(1)}</strong></span>
                         <span class="metric">Intent: <strong>${audience.intent_score}</strong></span>
-                        <span class="metric">Fatigue: <strong>${audience.fatigue_score.toFixed(1)}</strong></span>
                         <span class="metric">CTR: <strong>${(audience.avg_ctr * 100).toFixed(2)}%</strong></span>
+                        <span class="metric">Fatigue: <strong>${audience.fatigue_score.toFixed(1)}</strong></span>
                     </div>
                     ` : ''}
                     <div class="item-reason">${action.reason}</div>
@@ -525,9 +570,10 @@ function renderAudiencesSection(audienceActions, finalState) {
                     </div>
                     ${audience ? `
                     <div class="item-metrics">
+                        <span class="metric">Health Score: <strong>${audience.composite_health_score.toFixed(1)}</strong></span>
                         <span class="metric">Intent: <strong>${audience.intent_score}</strong></span>
-                        <span class="metric">Fatigue: <strong>${audience.fatigue_score.toFixed(1)}</strong></span>
                         <span class="metric">CTR: <strong>${(audience.avg_ctr * 100).toFixed(2)}%</strong></span>
+                        <span class="metric">Fatigue: <strong>${audience.fatigue_score.toFixed(1)}</strong></span>
                     </div>
                     ` : ''}
                     <div class="item-reason">${action.reason}</div>
@@ -686,12 +732,12 @@ function populateCampaignSelector(campaignMap) {
         return avgRoasB - avgRoasA;
     });
 
-    // Default campaigns to select (names ending with 25, 16, 19, 8)
+    // Default campaigns to select (campaigns 8, 12, 22, 25)
     const defaultCampaignNames = [
-        'MSIL Festive Campaign 25',
-        'Maruti Launch Campaign 16',
-        'MSIL Festive Campaign 19',
-        'MSIL Exchange Campaign 8'
+        'MSIL Exchange Campaign 8',
+        'Suzuki Launch Campaign 12',
+        'Suzuki Brand Campaign 22',
+        'MSIL Festive Campaign 25'
     ];
 
     // Populate selector
@@ -752,7 +798,7 @@ function renderROASChart(weeks, campaignMap, selectedCampaignIds = null) {
             label: campaign.name,
             data: campaign.roasData,
             borderColor: colors[index],
-            backgroundColor: 'transparent',
+            backgroundColor: colors[index],
             borderWidth: 2,
             fill: false,
             tension: 0.4,
@@ -775,7 +821,20 @@ function renderROASChart(weeks, campaignMap, selectedCampaignIds = null) {
             maintainAspectRatio: true,
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'right',
+                    align: 'start',
+                    labels: {
+                        boxWidth: 15,
+                        boxHeight: 15,
+                        padding: 8,
+                        usePointStyle: false,
+                        font: {
+                            size: 13,
+                            family: "'Segoe UI', sans-serif"
+                        },
+                        color: '#000000'
+                    }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(44, 62, 80, 0.9)',
@@ -844,7 +903,7 @@ function renderCVRChart(weeks, campaignMap, selectedCampaignIds = null) {
             label: campaign.name,
             data: campaign.cvrData,
             borderColor: colors[index],
-            backgroundColor: 'transparent',
+            backgroundColor: colors[index],
             borderWidth: 2,
             fill: false,
             tension: 0.4,
@@ -867,7 +926,20 @@ function renderCVRChart(weeks, campaignMap, selectedCampaignIds = null) {
             maintainAspectRatio: true,
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'right',
+                    align: 'start',
+                    labels: {
+                        boxWidth: 15,
+                        boxHeight: 15,
+                        padding: 8,
+                        usePointStyle: false,
+                        font: {
+                            size: 13,
+                            family: "'Segoe UI', sans-serif"
+                        },
+                        color: '#000000'
+                    }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(44, 62, 80, 0.9)',
