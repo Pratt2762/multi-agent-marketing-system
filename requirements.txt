@@ -1,0 +1,11 @@
+# Existing Dependencies
+openai>=1.0.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# NEW - Adobe Integration Dependencies
+requests>=2.31.0          # HTTP client for Adobe APIs
+PyJWT>=2.8.0              # JWT authentication for Adobe I/O
+cryptography>=41.0.0      # RSA key handling for Adobe I/O
+python-dotenv>=1.0.0      # Environment variables
+python-dateutil>=2.8.0    # Date parsing
