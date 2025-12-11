@@ -44,10 +44,10 @@ class AdobeClientFactory:
             MockAdobeClient or AdobeAEPClient instance
         """
         if use_mock:
-            print("🔧 Using MOCK Adobe client (CSV-based simulation)")
+            print("[MODE] Using MOCK Adobe client (CSV-based simulation)")
             return MockAdobeClient(data_dir=data_dir)
         else:
-            print("🔧 Using REAL Adobe AEP/RT-CDP client (API-based)")
+            print("[MODE] Using REAL Adobe AEP/RT-CDP client (API-based)")
 
             # Validate required credentials
             required = ['api_key', 'org_id', 'technical_account_id', 'private_key', 'client_secret']

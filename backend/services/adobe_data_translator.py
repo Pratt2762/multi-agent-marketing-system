@@ -107,7 +107,7 @@ class AdobeDataTranslator:
                 'avg_cvr': perf.get('avgCvr', 0.0),
                 'model_preference': attrs.get('model_preference', 'Unknown'),
                 'location_cluster': attrs.get('location_cluster', 'Unknown'),
-                'week': AdobeDataTranslator._current_week()
+                'week': AdobeDataTranslator._date_to_week(segment.get('dateRange', {}).get('end', ''))
             }
             records.append(record)
 

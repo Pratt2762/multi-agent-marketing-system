@@ -58,7 +58,7 @@ class AdobeAEPClient:
         # Authenticate on initialization
         self._authenticate()
 
-        print("🔐 Adobe AEP/RT-CDP Client initialized (Real API mode)")
+        print("[INIT] Adobe AEP/RT-CDP Client initialized (Real API mode)")
 
     def _authenticate(self):
         """
@@ -94,7 +94,7 @@ class AdobeAEPClient:
         response.raise_for_status()
 
         self.access_token = response.json()['access_token']
-        print("✅ Adobe authentication successful")
+        print("[OK] Adobe authentication successful")
 
     def _make_api_call(self, method, endpoint, payload=None):
         """

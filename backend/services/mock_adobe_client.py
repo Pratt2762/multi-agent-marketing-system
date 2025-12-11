@@ -41,8 +41,8 @@ class MockAdobeClient:
         self.ad_groups_csv = pd.read_csv(os.path.join(self.base_path, data_dir, 'ad_groups.csv'))
         self.audiences_csv = pd.read_csv(os.path.join(self.base_path, data_dir, 'audiences.csv'))
 
-        print(f"📦 Mock Adobe Client initialized (using CSV data from {data_dir}/)")
-        print(f"   Simulating Adobe AEP + RT-CDP APIs")
+        print(f"[INIT] Mock Adobe Client initialized (using CSV data from {data_dir}/)")
+        print(f"       Simulating Adobe AEP + RT-CDP APIs")
 
     def get_campaign_data(self, days_back=14):
         """
@@ -53,14 +53,19 @@ class MockAdobeClient:
 
         Args:
             days_back: Number of days to fetch (simulates date range query)
+                      Use days_back=999 to fetch ALL historical data (for hackathon demo)
         """
-        # Simulate date filtering (last N days = last N/7 weeks in CSV)
-        weeks_back = max(1, days_back // 7)
-        max_week = self.campaigns_csv['week'].max()
-        min_week = max_week - weeks_back + 1
+        if days_back >= 999:
+            # Return ALL weeks (hackathon demo mode)
+            recent_campaigns = self.campaigns_csv.copy()
+        else:
+            # Simulate date filtering (last N days = last N/7 weeks in CSV)
+            weeks_back = max(1, days_back // 7)
+            max_week = self.campaigns_csv['week'].max()
+            min_week = max_week - weeks_back + 1
 
-        # Filter to recent weeks (simulating AEP date range query)
-        recent_campaigns = self.campaigns_csv[self.campaigns_csv['week'] >= min_week]
+            # Filter to recent weeks (simulating AEP date range query)
+            recent_campaigns = self.campaigns_csv[self.campaigns_csv['week'] >= min_week]
 
         # Convert CSV to Adobe AEP JSON format
         adobe_json = self._csv_to_adobe_campaign_json(recent_campaigns)
@@ -68,16 +73,24 @@ class MockAdobeClient:
         # Translate back to DataFrame (same as real client)
         return AdobeDataTranslator.translate_campaigns(adobe_json)
 
-    def get_ad_group_metrics(self):
+    def get_ad_group_metrics(self, all_weeks=True):
         """
         Simulate Adobe Experience Platform Ad Group API (via Source Connectors).
 
         Real endpoint: GET /data/foundation/query/adgroups
         Returns: pandas DataFrame (via translator)
+
+        Args:
+            all_weeks: If True, return all weeks (for hackathon demo)
+                      If False, return only latest week
         """
-        # Get latest week data (simulating current state)
-        max_week = self.ad_groups_csv['week'].max()
-        recent_ad_groups = self.ad_groups_csv[self.ad_groups_csv['week'] == max_week]
+        if all_weeks:
+            # Return ALL weeks (hackathon demo mode)
+            recent_ad_groups = self.ad_groups_csv.copy()
+        else:
+            # Get latest week data (simulating current state)
+            max_week = self.ad_groups_csv['week'].max()
+            recent_ad_groups = self.ad_groups_csv[self.ad_groups_csv['week'] == max_week]
 
         # Convert CSV to Adobe AEP JSON format
         adobe_json = self._csv_to_adobe_adgroup_json(recent_ad_groups)
@@ -85,16 +98,24 @@ class MockAdobeClient:
         # Translate back to DataFrame (same as real client)
         return AdobeDataTranslator.translate_ad_groups(adobe_json)
 
-    def get_audience_segments(self):
+    def get_audience_segments(self, all_weeks=True):
         """
         Simulate Adobe Real-Time CDP Segment API.
 
         Real endpoint: GET /data/core/ups/segment/definitions
         Returns: pandas DataFrame (via translator)
+
+        Args:
+            all_weeks: If True, return all weeks (for hackathon demo)
+                      If False, return only latest week
         """
-        # Get latest week data (simulating current segment state)
-        max_week = self.audiences_csv['week'].max()
-        current_audiences = self.audiences_csv[self.audiences_csv['week'] == max_week]
+        if all_weeks:
+            # Return ALL weeks (hackathon demo mode)
+            current_audiences = self.audiences_csv.copy()
+        else:
+            # Get latest week data (simulating current segment state)
+            max_week = self.audiences_csv['week'].max()
+            current_audiences = self.audiences_csv[self.audiences_csv['week'] == max_week]
 
         # Convert CSV to Adobe RT-CDP JSON format
         adobe_json = self._csv_to_adobe_segment_json(current_audiences)
@@ -222,7 +243,10 @@ class MockAdobeClient:
                     "totalProfiles": 150000  # Mock value
                 },
                 "status": "active",
-                "lastEvaluated": datetime.now().isoformat() + "Z"
+                "lastEvaluated": datetime.now().isoformat() + "Z",
+                "dateRange": {
+                    "end": self._week_to_date(int(row['week']))
+                }
             }
             segments.append(segment)
 
