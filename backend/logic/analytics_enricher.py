@@ -101,8 +101,8 @@ def enrich_campaigns(campaigns, campaigns_df, current_week):
             'percentile': percentile,
             'trend_direction': trend_data['direction'],
             'momentum': trend_data['momentum'],  # 1-week momentum
-            'momentum_3week': trend_data['momentum_3week'],  # 3-week momentum
-            'avg_roas_3week': trend_data['avg_3week'],  # 3-week rolling average
+            'momentum_2week': trend_data['momentum_2week'],  # 2-week momentum
+            'avg_roas_2week': trend_data['avg_2week'],  # 2-week rolling average
             'trend_consistency': trend_data['trend_consistency'],  # Trend stability
             'weeks_above_median': weeks_above_median,
             'distance_from_mean': round(distance_from_mean, 2),
@@ -156,8 +156,8 @@ def enrich_ad_groups(ad_groups, ad_groups_df, current_week):
             'percentile': percentile,
             'trend_direction': trend_data['direction'],
             'momentum': trend_data['momentum'],  # 1-week momentum
-            'momentum_3week': trend_data['momentum_3week'],  # 3-week momentum
-            'avg_roas_3week': trend_data['avg_3week'],  # 3-week rolling average
+            'momentum_2week': trend_data['momentum_2week'],  # 2-week momentum
+            'avg_roas_2week': trend_data['avg_2week'],  # 2-week rolling average
             'trend_consistency': trend_data['trend_consistency'],  # Trend stability
             'distance_from_mean': round(distance_from_mean, 2),
             'volatility': trend_data['volatility']
@@ -248,10 +248,10 @@ def enrich_audiences(audiences, audiences_df, current_week):
 def calculate_trend(df, entity_id, current_week, metric='roas', id_column='campaign_id'):
     """
     Calculates trend direction and momentum for a given entity.
-    Now includes both 1-week and 3-week analysis for more stable insights.
+    Now includes both 1-week and 2-week analysis for more stable insights.
 
     Returns:
-        Dictionary with 'direction', 'momentum', 'momentum_3week', 'avg_3week',
+        Dictionary with 'direction', 'momentum', 'momentum_2week', 'avg_2week',
         'volatility', and 'trend_consistency'
     """
 
@@ -265,8 +265,8 @@ def calculate_trend(df, entity_id, current_week, metric='roas', id_column='campa
         return {
             'direction': 'stable',
             'momentum': 0.0,
-            'momentum_3week': 0.0,
-            'avg_3week': entity_data[metric].iloc[0] if len(entity_data) == 1 else 0.0,
+            'momentum_2week': 0.0,
+            'avg_2week': entity_data[metric].iloc[0] if len(entity_data) == 1 else 0.0,
             'volatility': 0.0,
             'trend_consistency': 'insufficient_data'
         }
@@ -278,50 +278,42 @@ def calculate_trend(df, entity_id, current_week, metric='roas', id_column='campa
     if len(recent_values) == 2 and recent_values[0] != 0:
         momentum_1week = ((recent_values[1] - recent_values[0]) / abs(recent_values[0])) * 100
 
-    # 3-WEEK MOMENTUM: Compare current week vs 3 weeks ago (if available)
-    momentum_3week = 0.0
-    avg_3week = 0.0
+    # 2-WEEK MOMENTUM: Compare current week vs 2 weeks ago (if available)
+    momentum_2week = 0.0
+    avg_2week = 0.0
     trend_consistency = 'stable'
 
-    if len(entity_data) >= 3:
-        # Get last 3 weeks of data
-        last_3_weeks = entity_data[metric].tail(3).values
-        avg_3week = np.mean(last_3_weeks)
+    if len(entity_data) >= 2:
+        # Get last 2 weeks of data
+        last_2_weeks = entity_data[metric].tail(2).values
+        avg_2week = np.mean(last_2_weeks)
 
-        # 3-week momentum: current vs 3 weeks ago
-        if last_3_weeks[0] != 0:
-            momentum_3week = ((last_3_weeks[2] - last_3_weeks[0]) / abs(last_3_weeks[0])) * 100
+        # 2-week momentum: current vs 2 weeks ago (same as 1-week for 2 data points)
+        if last_2_weeks[0] != 0:
+            momentum_2week = ((last_2_weeks[1] - last_2_weeks[0]) / abs(last_2_weeks[0])) * 100
 
-        # Trend consistency: Are all 3 weeks moving in the same direction?
-        week1_to_2 = last_3_weeks[1] - last_3_weeks[0]
-        week2_to_3 = last_3_weeks[2] - last_3_weeks[1]
-
-        if week1_to_2 > 0 and week2_to_3 > 0:
+        # Trend consistency: Check if trend is consistent
+        if momentum_2week > 5:
             trend_consistency = 'consistent_improving'
-        elif week1_to_2 < 0 and week2_to_3 < 0:
+        elif momentum_2week < -5:
             trend_consistency = 'consistent_declining'
         else:
-            trend_consistency = 'volatile'
-    elif len(entity_data) == 2:
-        # Only 2 weeks available - use those 2 for average
-        avg_3week = np.mean(entity_data[metric].tail(2).values)
-        momentum_3week = momentum_1week  # Fallback to 1-week
-        trend_consistency = 'limited_data'
+            trend_consistency = 'stable'
     else:
-        avg_3week = entity_data[metric].iloc[0]
+        avg_2week = entity_data[metric].iloc[0]
         trend_consistency = 'insufficient_data'
 
-    # Determine overall direction based on 3-week momentum (more stable)
-    if len(entity_data) >= 3:
-        # Use 3-week momentum for direction if we have enough data
-        if momentum_3week > 5:
+    # Determine overall direction based on 2-week momentum
+    if len(entity_data) >= 2:
+        # Use 2-week momentum for direction if we have enough data
+        if momentum_2week > 5:
             direction = 'improving'
-        elif momentum_3week < -5:
+        elif momentum_2week < -5:
             direction = 'declining'
         else:
             direction = 'stable'
     else:
-        # Fallback to 1-week momentum
+        # Fallback to 1-week momentum (though same as 2-week when only 1 data point)
         if momentum_1week > 5:
             direction = 'improving'
         elif momentum_1week < -5:
@@ -329,17 +321,17 @@ def calculate_trend(df, entity_id, current_week, metric='roas', id_column='campa
         else:
             direction = 'stable'
 
-    # Calculate volatility (standard deviation of last 3 weeks if available)
-    if len(entity_data) >= 3:
-        volatility = np.std(entity_data[metric].tail(3).values)
+    # Calculate volatility (standard deviation of last 2 weeks if available)
+    if len(entity_data) >= 2:
+        volatility = np.std(entity_data[metric].tail(2).values)
     else:
-        volatility = entity_data[metric].std() if len(entity_data) >= 2 else 0.0
+        volatility = 0.0
 
     return {
         'direction': direction,
         'momentum': round(momentum_1week, 2),  # 1-week momentum
-        'momentum_3week': round(momentum_3week, 2),  # 3-week momentum
-        'avg_3week': round(avg_3week, 2),  # Rolling 3-week average
+        'momentum_2week': round(momentum_2week, 2),  # 2-week momentum
+        'avg_2week': round(avg_2week, 2),  # Rolling 2-week average
         'volatility': round(volatility, 2),
         'trend_consistency': trend_consistency
     }

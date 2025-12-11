@@ -64,7 +64,7 @@ def calculate_budget_actions(campaigns, top_percentile=0.30, bottom_percentile=0
             action_type,
             current_budget,
             {
-                'momentum_3week': campaign.get('momentum_3week', 0),
+                'momentum_2week': campaign.get('momentum_2week', 0),
                 'trend_consistency': campaign.get('trend_consistency', 'stable'),
                 'rank': rank
             }

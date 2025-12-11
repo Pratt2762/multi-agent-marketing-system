@@ -18,7 +18,7 @@ def calculate_budget_change(action_type, current_budget, campaign_metrics):
         action_type: "increase" / "decrease" / "no_change"
         current_budget: Current weekly budget (float)
         campaign_metrics: Dict with:
-            - momentum_3week: 3-week momentum percentage
+            - momentum_2week: 2-week momentum percentage
             - trend_consistency: "consistent_improving" / "consistent_declining" / "volatile"
             - rank: Campaign rank (1 = best)
 
@@ -42,15 +42,15 @@ def calculate_budget_change(action_type, current_budget, campaign_metrics):
         }
 
     # Extract metrics
-    momentum_3week = campaign_metrics.get('momentum_3week', 0)
+    momentum_2week = campaign_metrics.get('momentum_2week', 0)
     trend_consistency = campaign_metrics.get('trend_consistency', 'stable')
     rank = campaign_metrics.get('rank', 50)
 
     # Determine tier and multiplier
     if action_type == "increase":
-        tier, multiplier = _determine_increase_tier(momentum_3week, trend_consistency, rank)
+        tier, multiplier = _determine_increase_tier(momentum_2week, trend_consistency, rank)
     elif action_type == "decrease":
-        tier, multiplier = _determine_decrease_tier(momentum_3week, trend_consistency, rank)
+        tier, multiplier = _determine_decrease_tier(momentum_2week, trend_consistency, rank)
     else:
         # Fallback
         return {
@@ -88,7 +88,7 @@ def calculate_bid_change(action_type, current_bid, ad_group_metrics):
         action_type: "raise_bid" / "lower_bid" / "no_change"
         current_bid: Current bid amount (float)
         ad_group_metrics: Dict with:
-            - momentum_3week: 3-week momentum percentage
+            - momentum_2week: 2-week momentum percentage
             - trend_consistency: "consistent_improving" / "consistent_declining" / "volatile"
             - rank: Ad group rank (1 = best)
 
@@ -112,15 +112,15 @@ def calculate_bid_change(action_type, current_bid, ad_group_metrics):
         }
 
     # Extract metrics
-    momentum_3week = ad_group_metrics.get('momentum_3week', 0)
+    momentum_2week = ad_group_metrics.get('momentum_2week', 0)
     trend_consistency = ad_group_metrics.get('trend_consistency', 'stable')
     rank = ad_group_metrics.get('rank', 50)
 
     # Determine tier and multiplier (raise_bid = increase, lower_bid = decrease)
     if action_type == "raise_bid":
-        tier, multiplier = _determine_increase_tier(momentum_3week, trend_consistency, rank)
+        tier, multiplier = _determine_increase_tier(momentum_2week, trend_consistency, rank)
     elif action_type == "lower_bid":
-        tier, multiplier = _determine_decrease_tier(momentum_3week, trend_consistency, rank)
+        tier, multiplier = _determine_decrease_tier(momentum_2week, trend_consistency, rank)
     else:
         # Fallback
         return {
@@ -145,7 +145,7 @@ def calculate_bid_change(action_type, current_bid, ad_group_metrics):
     }
 
 
-def _determine_increase_tier(momentum_3week, trend_consistency, rank):
+def _determine_increase_tier(momentum_2week, trend_consistency, rank):
     """
     Determines the tier (high/moderate/low) for budget/bid increases.
 
@@ -158,19 +158,19 @@ def _determine_increase_tier(momentum_3week, trend_consistency, rank):
     """
 
     # HIGH TIER (20%): Strong consistent improvement
-    if trend_consistency == "consistent_improving" and momentum_3week >= 15:
+    if trend_consistency == "consistent_improving" and momentum_2week >= 15:
         return ("high", 1.20)
 
     # HIGH TIER (20%): Top performer with good momentum
-    if rank <= 10 and momentum_3week >= 10:
+    if rank <= 10 and momentum_2week >= 10:
         return ("high", 1.20)
 
     # MODERATE TIER (10%): Consistent improvement with moderate momentum
-    if trend_consistency == "consistent_improving" and momentum_3week >= 5:
+    if trend_consistency == "consistent_improving" and momentum_2week >= 5:
         return ("moderate", 1.10)
 
     # MODERATE TIER (10%): Good momentum even if not perfectly consistent
-    if momentum_3week >= 10:
+    if momentum_2week >= 10:
         return ("moderate", 1.10)
 
     # LOW TIER (5%): Default for any increase action
@@ -178,7 +178,7 @@ def _determine_increase_tier(momentum_3week, trend_consistency, rank):
     return ("low", 1.05)
 
 
-def _determine_decrease_tier(momentum_3week, trend_consistency, rank):
+def _determine_decrease_tier(momentum_2week, trend_consistency, rank):
     """
     Determines the tier (high/moderate/low) for budget/bid decreases.
 
@@ -191,19 +191,19 @@ def _determine_decrease_tier(momentum_3week, trend_consistency, rank):
     """
 
     # HIGH TIER (-20%): Strong consistent decline
-    if trend_consistency == "consistent_declining" and momentum_3week <= -15:
+    if trend_consistency == "consistent_declining" and momentum_2week <= -15:
         return ("high", 0.80)
 
     # HIGH TIER (-20%): Bottom performer with negative momentum
-    if rank >= 100 and momentum_3week <= -10:
+    if rank >= 100 and momentum_2week <= -10:
         return ("high", 0.80)
 
     # MODERATE TIER (-10%): Consistent decline with moderate negative momentum
-    if trend_consistency == "consistent_declining" and momentum_3week <= -5:
+    if trend_consistency == "consistent_declining" and momentum_2week <= -5:
         return ("moderate", 0.90)
 
     # MODERATE TIER (-10%): Significant negative momentum
-    if momentum_3week <= -10:
+    if momentum_2week <= -10:
         return ("moderate", 0.90)
 
     # LOW TIER (-5%): Default for any decrease action
