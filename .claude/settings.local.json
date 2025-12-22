@@ -4,7 +4,13 @@
       "Bash(python backend/main.py:*)",
       "Bash(python3:*)",
       "Bash(where python py python3)",
-      "Bash(py -c:*)"
+      "Bash(py -c:*)",
+      "Bash(py backend/test_adobe_mock.py)",
+      "Bash(py -m pip install:*)",
+      "Bash(git add:*)",
+      "Bash(ping:*)",
+      "Bash(git commit:*)",
+      "Bash(copy backendlogicexecutor.py backendlogicexecutor_old.py)"
     ],
     "deny": [],
     "ask": []
