@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production--Ready-brightgreen.svg)]()
 
-> **An intelligent multi-agent system that analyzes campaign performance, optimizes budgets, adjusts bids, and refines audience targeting using hybrid AI - combining deterministic analytics with GPT-5-Mini powered decision intelligence.**
+> **An intelligent multi-agent system that analyzes campaign performance, optimizes budgets, adjusts bids, and refines audience targeting using hybrid AI - combining deterministic analytics with GPT-5.1 powered decision intelligence.**
 
 ---
 
