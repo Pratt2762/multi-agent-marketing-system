@@ -1,7 +1,7 @@
 # 🚗 AI-Powered Marketing Agent for Maruti Suzuki
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
-[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--5--Mini-green.svg)](https://openai.com/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--5.1-green.svg)](https://openai.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production--Ready-brightgreen.svg)]()
 
